@@ -2,6 +2,23 @@
 
 源提示词编号：12。支持多声部总谱、VexFlow 五线谱、音符与力度/连音/表情编辑、移调乐器、分谱提取与换页提示音、版本差异、评论锚点、撤销重做、打印和未保存恢复。
 
+本版新增「排练校订」能力，解决三个窗口轮流保存互相覆盖的问题：
+
+- **三处改动汇成同一次校订**：总谱力度、指挥批注、分谱换页都先进入共享暂存（按小节锚点），一次提交只生成一条校订记录，记录修改小节、当时谱面版本（`baseVersion`）和提交标记（`token`）。
+- **乐观并发 + 冲突篮**：两位编辑从同一版谱面提交时，先完成者成为新的出版基线；后完成者的重叠小节按「声部×小节」聚合为冲突片段留在冲突篮，不覆盖已接受内容。并入时按字段三方合并（赢方单独改过的延音等属性保留），片段若已被后来者再次占用则拒绝。
+- **派生结果按小节失效**：节奏检查、换页提示、出版基线以 `类型:声部:小节` 为键缓存；某小节变化后只失效并重算关联格子，批注只令基线失效，未涉及声部/小节沿用原结果（派生日志可见「失效/重算/复用」）。
+- **写盘中断续做**：提交先写提交标记日志（WAL），再写快照。快照写坏时凭标记续做；`commitRevision` 按 token 幂等，同一校订不会产生两份记录。
+- **旧数据升级**：旧 `yy55-score-draft` 与历史版本迁移为新 schema，逐音保留音符、评论及其小节锚点，旧版本升级为已提交校订。
+
+## 目录
+
+- `src/rehearsal/types.ts` — 领域类型
+- `src/rehearsal/changes.ts` — 小节锚点、提交/冲突篮、派生缓存失效（纯函数）
+- `src/rehearsal/journal.ts` — 写盘日志与故障注入适配器
+- `src/rehearsal/migration.ts` — 旧数据升级
+- `src/store.ts` — Redux 状态、三窗口暂存、提交/续做/冲突处置 thunk
+- `tests/` — 纯函数与 Redux 全链路测试
+
 ## 技术栈
 
 React、Ant Design、Redux Toolkit、React Router、RTK Query、VexFlow、Vite、TypeScript。
@@ -10,11 +27,9 @@ React、Ant Design、Redux Toolkit、React Router、RTK Query、VexFlow、Vite�
 
 ```bash
 npm install
-npm run dev
-```
-
-开发地址：http://localhost:62055
-
-```bash
+npm run dev      # http://localhost:62055
+npm test         # 18 个单元/集成测试
 npm run build
 ```
+
+「版本与冲突 → 并发排练」页提供四种同版并发场景与写盘中断武装按钮，可直接演示冲突篮与按提交标记续做。
