@@ -22,3 +22,5 @@ body { margin: 0; min-width: 320px; }
 .diff-row { display:grid; grid-template-columns:90px 1fr auto; gap:12px; align-items:center; padding:11px 0; border-bottom:1px solid #edf0f5; }
 @media(max-width:1050px){.score-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}@media(max-width:620px){.page{padding:12px}.page-head{flex-direction:column}.metrics{grid-template-columns:1fr}.part-page{padding:16px;overflow:auto}.part-measure{min-width:620px}}
 @media print{.no-print{display:none!important}.ant-layout-sider,.ant-layout-header{display:none!important}.page{padding:0;max-width:none}.part-page{border:0;box-shadow:none}}
+.muted { color: #94a3b8; }
+.commit-marker { color: #64748b; font-size: 13px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
